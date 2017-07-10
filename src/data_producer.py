@@ -10,6 +10,7 @@ import logging
 import random
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
+from time import gmtime, strftime
 
 # - default kafka topic to write to
 topic_name = 'weather-analyzer'
@@ -45,10 +46,11 @@ def fetch_weather_zipcode(producer,zipcode):
     else:
         logger.debug('Retrieved weather data.')
         data=response.json()
-        data[u'main'][u'temp'] += random.randint(-5,5)
+        data[u'main'][u'temp'] += (random.randint(-5,5) + random.randint(-99,99)/100.0)
         data[u'main'][u'humidity'] += random.randint(-5,5)
         data[u'main'][u'pressure'] += random.randint(-5,5)
-        main = {'zipcode':zipcode,'name':data['name'],'temp':data[u'main'][u'temp'],'humidity':data[u'main'][u'humidity'],'pressusre':data[u'main'][u'pressure']}
+        cur_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        main = {'zipcode':zipcode,'name':data['name'],'time_stamp':cur_time,'temp':data[u'main'][u'temp'],'humidity':data[u'main'][u'humidity'],'pressure':data[u'main'][u'pressure']}
         logger.debug(main)
         producer.send(topic=topic_name, value=main, timestamp_ms=time.time())
         logger.debug('Sent weather data for zipcode %s to Kafka', zipcode)
